@@ -1,8 +1,8 @@
 # WP-M45-03: the engine and the configuration service read the timer
 
 format: ctx-256k
-status: planned
-depends-on: WP-M45-02
+status: done
+depends-on: WP-M45-01
 phase: 45
 milestone: m45
 context-budget: 55k tokens
@@ -23,9 +23,9 @@ files-write:
 
 - apps/api/src/tickets/escalation.ts
 - apps/api/src/escalation/config.ts
-- apps/api/src/tickets/escalation.test.ts
-- apps/api/src/escalation/**tests**/escalation-config.test.ts
-- apps/api/src/tickets/**tests**/phase13-exit.integration.spec.ts
+- packages/shared/src/escalation.ts
+- apps/api/src/tickets/**tests**/escalation-timer.integration.spec.ts
+- apps/api/src/escalation/**tests**/legacy-config-rows.test.ts
 
 interfaces:
 
@@ -88,8 +88,37 @@ non-matching condition keeps the rule silent.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: WP-M45-04 exists as a file since WP-M45-00
-- Open question (if any):
+- **Order changed: this package runs before WP-M45-02.** WP-M45-02 drops the
+  columns and rewrites the seed as timers; an engine that still read the rule
+  fields would stop firing and the phase-13 exit criterion would go red between
+  the two commits. So the engine learns the timer first, while the rows still
+  carry the old fields — `readEscalationRules` turns them into the timer leaf
+  with `escalationRuleTimerCondition`, the same conversion the migration `0069`
+  of WP-M45-02 applies to the rows. WP-M45-02 now depends on this package.
+- Files changed: `apps/api/src/tickets/escalation.ts` (`sinceEvent`,
+  `startInstants`, `decisionFor` from the timers, the first stage with
+  `withoutTimers`), `apps/api/src/escalation/config.ts`
+  (`escalationRuleTimerCondition`), `packages/shared/src/escalation.ts` (the
+  threshold walks the pauses to a fixed point), the new
+  `apps/api/src/tickets/__tests__/escalation-timer.integration.spec.ts` and
+  `apps/api/src/escalation/__tests__/legacy-config-rows.test.ts`. The named
+  files `tickets/escalation.test.ts` and `escalation/__tests__/escalation-config.test.ts`
+  do not exist; the tests live in the two files above, the phase-13 exit
+  criterion stays green unchanged.
+- Interfaces added: `escalationRuleTimerCondition(rule, stages)`; the facts
+  carry `sinceEvent`. The first stage stays due with the ticket **independent
+  of its timer** (§7.2, §7.11 — the timer leaves count as expired there), the
+  rest of its condition decides. A rule without a timer is due from the start
+  of its wait, a stageless rule without a timer from `received_at`.
+- The threshold now moves behind every pause inside the span, also one that
+  begins after the nominal expiry — the old arithmetic counted only the pauses
+  before it, so the threshold and the elapsed minutes of the facts could
+  disagree.
+- Not in this package: the write path of the configuration still stores the
+  rule fields (the columns and the CHECK `escalation_rules_clock_check` exist
+  until WP-M45-02); the normalization of an old body and the removal of the
+  reference repair of `writeEscalationStages` move to WP-M45-02 with the columns.
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run test:run` (with PostgreSQL 16), `npm run wp:check`
+- Follow-up WP: WP-M45-02 and WP-M45-04 exist as files since WP-M45-00
+- Open question: none

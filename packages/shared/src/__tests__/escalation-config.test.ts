@@ -123,12 +123,21 @@ describe('the first stage of a chain', () => {
   })
 
   it('is nothing without a stage without a predecessor', () => {
-    expect(escalationFirstStageKey([{ key: 'work_order', position: 2, predecessor: 'review' }])).toBeNull()
+    expect(
+      escalationFirstStageKey([{ key: 'work_order', position: 2, predecessor: 'review' }]),
+    ).toBeNull()
   })
 })
 
 describe('the stage chain validator', () => {
-  const events = ['review_started', 'work_order_set', 'assigned', 'offered', 'accepted', 'acknowledged']
+  const events = [
+    'review_started',
+    'work_order_set',
+    'assigned',
+    'offered',
+    'accepted',
+    'acknowledged',
+  ]
 
   function stage(
     key: string,
@@ -231,18 +240,32 @@ describe('the default rules', () => {
     ])
   })
 
-  it('keep the deadlines of ADR-0008', () => {
-    const review = DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.stageKey === 'review')
-    const offer = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'offered',
+  it('keep the deadlines of ADR-0008 as the timers of the table of §7.2', () => {
+    const timers = Object.fromEntries(
+      DEFAULT_WORKFLOW_ESCALATION_RULES.map((rule) => [
+        rule.key,
+        escalationTimerLeaves(rule.condition).map((timer) => timer.value),
+      ]),
     )
-    const assignment = DEFAULT_WORKFLOW_ESCALATION_RULES.find(
-      (rule) => rule.stageKey === 'acceptance' && rule.reference === 'assigned',
-    )
+    const even = (value: number) => ({ low: value, normal: value, high: value, critical: value })
 
-    expect(review?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
-    expect(offer?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 10 })
-    expect(assignment?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 15 })
+    expect(timers).toEqual({
+      'new#1': [{ reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } }],
+      'review#1': [
+        { reference: 'received_at', minutes: { low: 15, normal: 15, high: 15, critical: 5 } },
+      ],
+      'work_order#1': [{ reference: 'review_started', minutes: even(30) }],
+      'assignment#1': [{ reference: 'work_order_set', minutes: even(30) }],
+      'acceptance#1': [{ reference: 'offered', minutes: { low: 20, normal: 20, high: 20, critical: 10 } }],
+      'acceptance#2': [{ reference: 'assigned', minutes: even(15) }],
+      'acknowledgement#1': [{ reference: 'accepted', minutes: even(60) }],
+      'deadline#1': [{ percent: 80 }],
+      'deadline#2': [{ percent: 100 }],
+    })
+
+    for (const rule of DEFAULT_WORKFLOW_ESCALATION_RULES) {
+      expect(Object.keys(rule)).toEqual(['key', 'stageKey', 'condition', 'actions', 'active'])
+    }
   })
 
   it('are a valid configuration', () => {
@@ -449,16 +472,12 @@ describe('the offer and assign actions', () => {
   })
 
   it('rejects a target without a kind and one without an id', () => {
-    expect(
-      escalationTargetSchema.safeParse({ id: poolTarget.id }).success,
-    ).toBe(false)
+    expect(escalationTargetSchema.safeParse({ id: poolTarget.id }).success).toBe(false)
     expect(escalationTargetSchema.safeParse({ kind: 'pool' }).success).toBe(false)
     expect(escalationTargetSchema.safeParse({ kind: 'team', id: poolTarget.id }).success).toBe(
       false,
     )
-    expect(escalationTargetSchema.safeParse({ kind: 'pool', id: 'not-a-uuid' }).success).toBe(
-      false,
-    )
+    expect(escalationTargetSchema.safeParse({ kind: 'pool', id: 'not-a-uuid' }).success).toBe(false)
   })
 })
 
@@ -543,7 +562,8 @@ describe('the notify action', () => {
 })
 
 describe('the condition contract', () => {
-  it('rejects a leaf with a value of the wrong type', () => {    const result = escalationConditionSchema.safeParse({
+  it('rejects a leaf with a value of the wrong type', () => {
+    const result = escalationConditionSchema.safeParse({
       field: 'priority',
       operator: 'eq',
       value: 42,
@@ -623,17 +643,20 @@ describe('the condition evaluation', () => {
   })
 
   it('compares a boolean field', () => {
-    expect(evaluateEscalationCondition({ field: 'assigned', operator: 'eq', value: false }, facts)).toBe(
-      true,
-    )
-    expect(evaluateEscalationCondition({ field: 'paused', operator: 'eq', value: true }, facts)).toBe(
-      false,
-    )
+    expect(
+      evaluateEscalationCondition({ field: 'assigned', operator: 'eq', value: false }, facts),
+    ).toBe(true)
+    expect(
+      evaluateEscalationCondition({ field: 'paused', operator: 'eq', value: true }, facts),
+    ).toBe(false)
   })
 
   it('knows the stages the ticket has reached', () => {
     expect(
-      evaluateEscalationCondition({ field: 'stageReached', operator: 'eq', value: 'review' }, facts),
+      evaluateEscalationCondition(
+        { field: 'stageReached', operator: 'eq', value: 'review' },
+        facts,
+      ),
     ).toBe(true)
     expect(
       evaluateEscalationCondition(
@@ -663,9 +686,7 @@ describe('the condition evaluation', () => {
     }
 
     expect(evaluateEscalationCondition(condition, facts)).toBe(true)
-    expect(
-      evaluateEscalationCondition(condition, { ...facts, priority: 'low' }),
-    ).toBe(false)
+    expect(evaluateEscalationCondition(condition, { ...facts, priority: 'low' })).toBe(false)
   })
 })
 
@@ -707,12 +728,12 @@ describe('the readiness shift in a condition (§7.4, ADR-0030)', () => {
   })
 
   it('never matches without the readiness of the scan', () => {
-    expect(evaluateEscalationCondition({ field: 'shift', operator: 'eq', value: pool }, facts)).toBe(
-      false,
-    )
-    expect(evaluateEscalationCondition({ field: 'shift', operator: 'ne', value: pool }, facts)).toBe(
-      false,
-    )
+    expect(
+      evaluateEscalationCondition({ field: 'shift', operator: 'eq', value: pool }, facts),
+    ).toBe(false)
+    expect(
+      evaluateEscalationCondition({ field: 'shift', operator: 'ne', value: pool }, facts),
+    ).toBe(false)
   })
 
   it('accepts the leaf in the contract and refuses a value that is no uuid', () => {
@@ -720,7 +741,8 @@ describe('the readiness shift in a condition (§7.4, ADR-0030)', () => {
       escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: pool }).success,
     ).toBe(true)
     expect(
-      escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: 'pool' }).success,
+      escalationConditionSchema.safeParse({ field: 'shift', operator: 'eq', value: 'pool' })
+        .success,
     ).toBe(false)
   })
 })
@@ -733,26 +755,22 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
   it('accepts both value shapes', () => {
     expect(
       escalationConditionSchema.safeParse(
-        timerLeaf({ reference: 'received_at', minutes: minutes15 })
+        timerLeaf({ reference: 'received_at', minutes: minutes15 }),
       ).success,
     ).toBe(true)
-    expect(
-      escalationConditionSchema.safeParse(timerLeaf({ percent: 80 })).success,
-    ).toBe(true)
+    expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 80 })).success).toBe(true)
   })
 
   it('refuses an incomplete value and a foreign operator', () => {
     expect(
       escalationConditionSchema.safeParse(timerLeaf({ reference: 'received_at' })).success,
     ).toBe(false)
-    expect(
-      escalationConditionSchema.safeParse(timerLeaf({ minutes: minutes15 })).success,
-    ).toBe(false)
+    expect(escalationConditionSchema.safeParse(timerLeaf({ minutes: minutes15 })).success).toBe(
+      false,
+    )
     expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 0 })).success).toBe(false)
     expect(escalationConditionSchema.safeParse(timerLeaf({ percent: 101 })).success).toBe(false)
-    expect(
-      escalationConditionSchema.safeParse(timerLeaf(minutes15, 'gt')).success,
-    ).toBe(false)
+    expect(escalationConditionSchema.safeParse(timerLeaf(minutes15, 'gt')).success).toBe(false)
   })
 
   it('evaluates the delay of the priority of the ticket', () => {
@@ -762,16 +780,22 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
     }
 
     expect(
-      evaluateEscalationCondition(timerLeaf({ reference: 'received_at', minutes: minutes15 }), withTimer)
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'received_at', minutes: minutes15 }),
+        withTimer,
+      ),
     ).toBe(true)
     expect(
-      evaluateEscalationCondition(timerLeaf({ reference: 'offered', minutes: minutes15 }), withTimer)
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'offered', minutes: minutes15 }),
+        withTimer,
+      ),
     ).toBe(false)
     expect(
       evaluateEscalationCondition(
         timerLeaf({ reference: 'received_at', minutes: minutes15 }, 'notExpired'),
         withTimer,
-      )
+      ),
     ).toBe(false)
   })
 
@@ -782,17 +806,60 @@ describe('the waiting clock as a condition (ADR-0064)', () => {
     }
 
     expect(
-      evaluateEscalationCondition(timerLeaf({ reference: 'accepted', minutes: minutes15 }), withTimer)
+      evaluateEscalationCondition(
+        timerLeaf({ reference: 'accepted', minutes: minutes15 }),
+        withTimer,
+      ),
     ).toBe(false)
     expect(
       evaluateEscalationCondition(
         timerLeaf({ reference: 'accepted', minutes: minutes15 }, 'notExpired'),
         withTimer,
-      )
+      ),
     ).toBe(true)
   })
 
+  it('reads the delay of every priority and falls back to normal', () => {
+    const value = {
+      reference: 'received_at',
+      minutes: { low: 30, normal: 15, high: 10, critical: 5 },
+    }
+    const at = (priority: string, elapsed: number) =>
+      evaluateEscalationCondition(timerLeaf(value), {
+        ...facts,
+        priority,
+        sinceEvent: { received_at: elapsed },
+      })
+
+    expect(at('critical', 5)).toBe(true)
+    expect(at('critical', 4)).toBe(false)
+    expect(at('low', 29)).toBe(false)
+    expect(at('low', 30)).toBe(true)
+    expect(at('unknown', 15)).toBe(true)
+    expect(at('unknown', 14)).toBe(false)
+  })
+
+  it('never expires without the elapsed facts', () => {
+    const value = { reference: 'received_at', minutes: minutes15 }
+    const withoutFacts: EscalationFacts = { ...facts, sinceEvent: undefined }
+
+    expect(evaluateEscalationCondition(timerLeaf(value), withoutFacts)).toBe(false)
+    expect(evaluateEscalationCondition(timerLeaf(value, 'notExpired'), withoutFacts)).toBe(true)
+  })
+
   it('compares the percent variant against the timeline', () => {
+    expect(
+      evaluateEscalationCondition(timerLeaf({ percent: 80 }), { ...facts, deadlinePercent: 80 }),
+    ).toBe(true)
+    expect(
+      evaluateEscalationCondition(timerLeaf({ percent: 100 }), { ...facts, deadlinePercent: 99 }),
+    ).toBe(false)
+    expect(
+      evaluateEscalationCondition(timerLeaf({ percent: 100 }, 'notExpired'), {
+        ...facts,
+        deadlinePercent: 99,
+      }),
+    ).toBe(true)
     expect(evaluateEscalationCondition(timerLeaf({ percent: 40 }), facts)).toBe(true)
     expect(evaluateEscalationCondition(timerLeaf({ percent: 80 }), facts)).toBe(false)
   })

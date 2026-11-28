@@ -30,10 +30,9 @@
   },
   "escalation": {
     "deadlinesMore": "Die Frist ist die Wartezeit in Stunden pro Priorität. Verstreicht sie, ohne dass die Bedingung zutrifft, feuert die Regel nicht.",
-    "stagesMore": "Eine Stufe ist ein Meilenstein des Workflows (zum Beispiel „Prüfung“). Eine Regel verbindet eine Stufe mit einer Wartezeit, einer Bedingung und den auszuführenden Aktionen.",
-    "chainMore": "Jede Stufe nennt ihren Vorgänger: dessen Abschluss startet die Wartezeit. Ohne Vorgänger beginnt die Wartezeit mit der Meldung. Stufen lassen sich hinzufügen und entfernen; die Regeln einer entfernten Stufe entfallen mit ihr.",
-    "referenceMore": "Das Start-Ereignis startet die Warteuhr der Regel (zum Beispiel „Meldung eingegangen“). „Keine“ bedeutet: die Regel wartet auf nichts und feuert, sobald ihre Bedingung zutrifft.",
-    "timelineMore": "Die Minuten sind die Wartezeit der Stufe je Priorität. Der Prozentwert gilt nur für die Fristen-Regeln: 80 % und 100 % der Ticketfrist.",
+    "stagesMore": "Eine Stufe ist ein Meilenstein des Workflows (zum Beispiel „Prüfung“). Eine Regel verbindet eine Stufe mit einer Bedingung — die Wartezeit ist ein Teil davon — und den auszuführenden Aktionen.",
+    "chainMore": "Jede Stufe nennt ihren Vorgänger: Erreicht das Ticket den Vorgänger, wartet es auf diese Stufe. Eine Regel ohne eigene Wartezeit feuert ab diesem Moment; ohne Vorgänger ab der Meldung. Stufen lassen sich hinzufügen und entfernen; die Regeln einer entfernten Stufe entfallen mit ihr.",
+    "timerMore": "Die Wartezeit ist ein Teil der Bedingung: Sie beginnt beim gewählten Startwert (zum Beispiel „Meldung eingegangen“) und dauert so viele Minuten, wie für die Priorität des Tickets eingetragen sind; eine Pause des Tickets hält sie an. „Ticketfrist (Prozent)“ misst stattdessen den Anteil der Ticketfrist. Ist die Wartezeit abgelaufen und trifft der Rest der Bedingung zu, feuert die Regel genau einmal: Sie schreibt den Eskalationseintrag in den Ticket-Verlauf und führt ihre Aktionen aus. Ist die Stufe der Regel schon erreicht, feuert sie nicht mehr. Eine Regel ohne Wartezeit feuert, sobald ihre Stufe wartet und die Bedingung zutrifft.",
     "conditionMore": "Die Bedingung entscheidet, ob eine Regel feuert. „Alle“ verlangt, dass jedes Blatt zutrifft; „eine von“ genügt, wenn mindestens eines zutrifft.",
     "actionsMore": "Die Aktionen laufen, wenn die Regel feuert: eine Benachrichtigung über die gewählten Kanäle, eine Webhook-Zustellung oder eine Notiz im Ticket-Verlauf.",
     "notifyMore": "Das Ziel erhält die Nachricht über die Kanäle, die es selbst ausgewählt hat — ohne Auswahl über sein eigenes ntfy-Thema."

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { normalizeEscalationRows } from '../config'
+import { escalationRuleTimerCondition, normalizeEscalationRows } from '../config'
 import { escalationConfigSchema } from '@stoerdesk/shared'
 
 const STAGE = {
@@ -37,7 +37,19 @@ describe('the read of an escalation configuration of an older installation', () 
     ]
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
-    expect(normalized[0]?.condition).toEqual({ all: [] })
+    // The empty condition takes the timer of the former clock fields (ADR-0064).
+    expect(normalized[0]?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          },
+        },
+      ],
+    })
   })
 
   it('keeps an old assign action that names a technician as a target of the kind user', () => {
@@ -130,8 +142,18 @@ describe('the read of an escalation configuration of an older installation', () 
     ]
     const { rules: normalized } = normalizeEscalationRows([NEW_STAGE, STAGE], rules)
 
-    expect(normalized[0]?.percent).toBeNull()
-    expect(normalized[0]?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
+    expect(normalized[0]?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+          },
+        },
+      ],
+    })
   })
 
   it('answers a configuration that follows the contract after the normalization', () => {
@@ -152,5 +174,93 @@ describe('the read of an escalation configuration of an older installation', () 
     )
 
     expect(parsed.success).toBe(true)
+  })
+})
+
+describe('the former clock fields of a rule become a timer (ADR-0064)', () => {
+  const minutes = { low: 15, normal: 15, high: 15, critical: 5 }
+  const stages = [NEW_STAGE, STAGE]
+  const timer = (value: unknown) => ({ field: 'timer_expired', operator: 'expired', value })
+
+  it('turns the reference and the minutes of a stage rule into a timer', () => {
+    expect(
+      escalationRuleTimerCondition(
+        { stageKey: 'review', reference: 'received_at', minutes, percent: null, condition: {} },
+        stages,
+      ),
+    ).toEqual({ all: [timer({ reference: 'received_at', minutes })] })
+  })
+
+  it('starts a rule without a reference at the clock of its stage', () => {
+    const workOrder = { ...STAGE, key: 'work_order', position: 3, predecessor: 'review' }
+
+    expect(
+      escalationRuleTimerCondition(
+        { stageKey: 'work_order', reference: null, minutes, percent: null, condition: null },
+        [...stages, workOrder],
+      ),
+    ).toEqual({ all: [timer({ reference: 'review_started', minutes })] })
+  })
+
+  it('turns the percentage of a deadline rule into a percent timer', () => {
+    expect(
+      escalationRuleTimerCondition(
+        { stageKey: null, reference: null, minutes: null, percent: 80, condition: { all: [] } },
+        stages,
+      ),
+    ).toEqual({ all: [timer({ percent: 80 })] })
+  })
+
+  it('merges the timer with an old condition into one all group', () => {
+    const priority = { field: 'priority', operator: 'eq', value: 'critical' }
+    const any = { any: [priority] }
+
+    expect(
+      escalationRuleTimerCondition(
+        {
+          stageKey: 'review',
+          reference: 'received_at',
+          minutes,
+          percent: null,
+          condition: { all: [priority] },
+        },
+        stages,
+      ),
+    ).toEqual({ all: [timer({ reference: 'received_at', minutes }), priority] })
+    expect(
+      escalationRuleTimerCondition(
+        { stageKey: 'review', reference: 'received_at', minutes, percent: null, condition: any },
+        stages,
+      ),
+    ).toEqual({ all: [timer({ reference: 'received_at', minutes }), any] })
+  })
+
+  it('keeps a condition that already carries a timer and a rule without a clock', () => {
+    const carried = { all: [timer({ percent: 100 })] }
+
+    expect(
+      escalationRuleTimerCondition(
+        {
+          stageKey: 'review',
+          reference: 'received_at',
+          minutes,
+          percent: null,
+          condition: carried,
+        },
+        stages,
+      ),
+    ).toEqual(carried)
+    expect(
+      escalationRuleTimerCondition(
+        {
+          stageKey: 'review',
+          reference: null,
+          minutes: null,
+          percent: null,
+          condition: { all: [] },
+        },
+        stages,
+      ),
+    ).toEqual({ all: [] })
   })
 })

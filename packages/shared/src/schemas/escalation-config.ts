@@ -571,56 +571,24 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine((a
       message: 'notify_needs_target_or_channel',
     })
   }
-
 })
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
 
-export const escalationRuleConfigSchema = z
-  .object({
-    key: z.string().regex(escalationRuleKeyPattern),
-    /** The stage of the rule; the deadline rules carry no stage. */
-    stageKey: z.string().regex(keyPattern).nullable(),
-    /** The event that starts the waiting clock. */
-    reference: z.enum(ESCALATION_REFERENCE_EVENTS).nullable(),
-    /** The waiting deadline per priority. */
-    minutes: escalationMinutesSchema.nullable(),
-    /** The percentage of the timeline of a deadline rule. */
-    percent: z.number().int().min(1).max(100).nullable(),
-    condition: escalationConditionSchema,
-    actions: z.array(escalationActionConfigSchema).max(20),
-    active: z.boolean(),
-  })
-  .superRefine((rule, context) => {
-    const hasMinutes = rule.minutes !== null
-    const hasPercent = rule.percent !== null
-
-    // A rule may carry neither any more — then its clock is a
-    // `timer_expired` leaf of its condition (ADR-0064).
-    if (hasMinutes && hasPercent) {
-      context.addIssue({
-        code: 'custom',
-        path: ['minutes'],
-        message: 'a rule has either minutes or a percentage',
-      })
-    }
-
-    if (hasMinutes && rule.stageKey === null) {
-      context.addIssue({
-        code: 'custom',
-        path: ['stageKey'],
-        message: 'a rule with minutes belongs to a stage',
-      })
-    }
-
-    if (hasPercent && rule.reference !== null) {
-      context.addIssue({
-        code: 'custom',
-        path: ['reference'],
-        message: 'a deadline rule has no reference',
-      })
-    }
-  })
+/**
+ * A rule (§7.3): its stage, its condition and its actions. The waiting clock
+ * is the `timer_expired` leaf of the condition (ADR-0064) — the former fields
+ * `reference`, `minutes` and `percent` are gone; a body that still sends them
+ * is answered by the configuration service, which stores them as the timer.
+ */
+export const escalationRuleConfigSchema = z.object({
+  key: z.string().regex(escalationRuleKeyPattern),
+  /** The stage of the rule; the deadline rules carry no stage. */
+  stageKey: z.string().regex(keyPattern).nullable(),
+  condition: escalationConditionSchema,
+  actions: z.array(escalationActionConfigSchema).max(20),
+  active: z.boolean(),
+})
 
 export type EscalationRuleConfig = z.infer<typeof escalationRuleConfigSchema>
 
@@ -673,18 +641,6 @@ export const escalationConfigSchema = z
           path: ['rules', index, 'stageKey'],
           message: 'unknown_stage_key',
         })
-      }
-
-      if (rule.stageKey !== null && rule.reference !== null) {
-        const clockEvents = escalationStageClockEvents(rule.stageKey, config.stages)
-
-        if (!clockEvents.includes(rule.reference)) {
-          context.addIssue({
-            code: 'custom',
-            path: ['rules', index, 'reference'],
-            message: 'reference_does_not_match_stage_clock',
-          })
-        }
       }
     })
 
@@ -873,9 +829,8 @@ function evaluateLeaf(leaf: EscalationConditionLeaf, facts: EscalationFacts): bo
         'percent' in value
           ? facts.deadlinePercent >= value.percent
           : facts.sinceEvent !== undefined &&
-              (facts.sinceEvent[value.reference] ?? -1) >=
-                ((value.minutes as Record<string, number>)[facts.priority] ??
-                  value.minutes.normal)
+            (facts.sinceEvent[value.reference] ?? -1) >=
+              ((value.minutes as Record<string, number>)[facts.priority] ?? value.minutes.normal)
 
       return leaf.operator === 'notExpired' ? !expired : expired
     }
@@ -922,10 +877,12 @@ export function escalationTimerLeaves(
 
   return escalationConditionLeaves(condition).flatMap((entry) =>
     entry.field === 'timer_expired'
-      ? [{
-          operator: (entry.operator as 'expired' | 'notExpired'),
-          value: entry.value as EscalationTimerValue,
-        }]
+      ? [
+          {
+            operator: entry.operator as 'expired' | 'notExpired',
+            value: entry.value as EscalationTimerValue,
+          },
+        ]
       : [],
   )
 }
@@ -993,99 +950,56 @@ const evenMinutes = (value: number) => ({
   critical: value,
 })
 
+/** The waiting clock of a default rule: a `timer_expired` leaf (ADR-0064, §7.2). */
+const timer = (value: EscalationTimerValue): EscalationCondition => ({
+  all: [{ field: 'timer_expired', operator: 'expired', value }],
+})
+
+/** A default rule: its stage, its timer, no actions (§7.2). */
+const defaultRule = (
+  key: string,
+  stageKey: string | null,
+  value: EscalationTimerValue,
+): EscalationRuleConfig => ({
+  key,
+  stageKey,
+  condition: timer(value),
+  actions: [],
+  active: true,
+})
+
 /**
  * The rules of a fresh installation (§7.2). The deadlines of ADR-0008 are the
- * seed; the installation changes them in the administration.
+ * seed — each one a `timer_expired` leaf of the condition of its rule, the
+ * deadline rules the percent timers of 80 % and 100 % (ADR-0064); the
+ * installation changes them in the administration.
  */
 export const DEFAULT_WORKFLOW_ESCALATION_RULES: readonly EscalationRuleConfig[] = [
-  {
-    key: 'new#1',
-    stageKey: 'new',
+  defaultRule('new#1', 'new', {
     reference: 'received_at',
     minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'review#1',
-    stageKey: 'review',
+  }),
+  defaultRule('review#1', 'review', {
     reference: 'received_at',
     minutes: { low: 15, normal: 15, high: 15, critical: 5 },
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'work_order#1',
-    stageKey: 'work_order',
+  }),
+  defaultRule('work_order#1', 'work_order', {
     reference: 'review_started',
     minutes: evenMinutes(30),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'assignment#1',
-    stageKey: 'assignment',
+  }),
+  defaultRule('assignment#1', 'assignment', {
     reference: 'work_order_set',
     minutes: evenMinutes(30),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'acceptance#1',
-    stageKey: 'acceptance',
+  }),
+  defaultRule('acceptance#1', 'acceptance', {
     reference: 'offered',
     minutes: { low: 20, normal: 20, high: 20, critical: 10 },
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'acceptance#2',
-    stageKey: 'acceptance',
-    reference: 'assigned',
-    minutes: evenMinutes(15),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'acknowledgement#1',
-    stageKey: 'acknowledgement',
+  }),
+  defaultRule('acceptance#2', 'acceptance', { reference: 'assigned', minutes: evenMinutes(15) }),
+  defaultRule('acknowledgement#1', 'acknowledgement', {
     reference: 'accepted',
     minutes: evenMinutes(60),
-    percent: null,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'deadline#1',
-    stageKey: null,
-    reference: null,
-    minutes: null,
-    percent: 80,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
-  {
-    key: 'deadline#2',
-    stageKey: null,
-    reference: null,
-    minutes: null,
-    percent: 100,
-    condition: { all: [] },
-    actions: [],
-    active: true,
-  },
+  }),
+  defaultRule('deadline#1', null, { percent: 80 }),
+  defaultRule('deadline#2', null, { percent: 100 }),
 ]

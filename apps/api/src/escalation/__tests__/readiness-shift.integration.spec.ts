@@ -169,10 +169,19 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       await db.insert(escalationRules).values({
         key: RULE_KEY,
         stageKey: 'review',
-        reference: 'received_at',
-        minutes: { low: 5, normal: 5, high: 5, critical: 5 },
-        percent: null,
-        condition: { all: [{ field: 'shift', operator: 'eq', value: pool.id }] },
+        condition: {
+          all: [
+            {
+              field: 'timer_expired',
+              operator: 'expired',
+              value: {
+                reference: 'received_at',
+                minutes: { low: 5, normal: 5, high: 5, critical: 5 },
+              },
+            },
+            { field: 'shift', operator: 'eq', value: pool.id },
+          ],
+        },
         position: 95,
         active: true,
       })

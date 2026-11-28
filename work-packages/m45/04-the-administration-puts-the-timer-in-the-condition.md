@@ -1,7 +1,7 @@
 # WP-M45-04: the administration puts the timer in the condition
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-03
 phase: 45
 milestone: m45
@@ -29,6 +29,10 @@ files-write:
 - apps/web/src/i18n/locales/en/help.json
 - apps/web/src/admin/**tests**/escalation-rules-editor.test.tsx
 - apps/web/src/admin/**tests**/escalation-condition-builder.test.tsx
+- apps/web/src/admin/**tests**/escalation-page-fallbacks.test.tsx (the fallback of the minutes left with the fields)
+- packages/shared/src/schemas/escalation-config.ts and its test (the contract drops the three fields)
+- apps/api/src/escalation/config.ts, apps/api/src/tickets/escalation.ts (no `null` fields any more)
+- apps/api/src/escalation/**tests**/config-routes.integration.spec.ts, stage-chain-exit.integration.spec.ts, legacy-config-rows.test.ts
 
 interfaces:
 
@@ -97,8 +101,34 @@ text exists in `de` and `en`.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
-- Follow-up WP: none — the phase 45 is complete when this package is done
-- Open question (if any):
+- Files changed: `escalation-page.tsx` (the frame `escalation-rule-timeline`,
+  `seededMinutesFor` and the minutes state are gone; the condition opens the
+  rule form), `escalation-condition-builder.tsx` (the frame „Wartezeit“ of the
+  timer leaf: the start value over the six events plus „Ticketfrist
+  (Prozent)“, the four minutes fields per priority or the percent field, the ⓘ
+  of the timer; a field change keeps an allowed operator and gives the timer
+  the seeded clock), the `de`/`en` texts of `settings.json` and `help.json`,
+  the rule-editor, fallback and new condition-builder tests.
+- The contract drops `reference`, `minutes` and `percent` here (the field
+  removal WP-M45-02 announced): the administration no longer sends them, the
+  API keeps storing an old body that still sends them as the timer
+  (`bodyWithTimers`, ADR-0064 decision 8) — the zod object strips the fields
+  after that conversion. The API tests that asserted the `null` fields and the
+  former reference repair of a stage change now assert their absence and the
+  untouched timer.
+- i18n: `admin.escalation.condition.fields.timer_expired`, the operators
+  `expired`/`notExpired`, `admin.escalation.condition.timer.*` (legend, start,
+  events, deadline, percent, minutes); `admin.escalation.rule.reference`,
+  `.percent`, `.timeline`, `.none`, `.referenceEvents` and `.minutes` left
+  with the frame. `help.escalation.timelineMore` became
+  `help.escalation.timerMore` — the key names the timer now; `referenceMore`
+  folded into it. `stagesMore` and `chainMore` say that the waiting time is a
+  part of the condition and that a rule without one fires from the start of
+  its wait.
+- Known limit, unchanged: the builder edits one group level; a migrated rule
+  whose old condition was an `any` group shows its leaves flat.
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run test:run` (with PostgreSQL 16), `npm run i18n:check`,
+  `npm run wp:check`, `npm run test:e2e` (Chromium of the container)
+- Follow-up WP: none — phase 45 is closed
+- Open question: none

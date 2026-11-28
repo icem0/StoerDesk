@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   TIME_OF_DAY_INTERVAL_PATTERN,
+  escalationTimerThreshold,
   minutesOfDay,
   positiveMinutes,
   timeOfDayIntervalMatches,
@@ -10,6 +11,7 @@ import {
 import {
   escalationConditionSchema,
   evaluateEscalationCondition,
+  type EscalationCondition,
   type EscalationFacts,
 } from '../schemas/escalation-config.js'
 
@@ -79,7 +81,11 @@ describe('the time_of_day condition leaf', () => {
   }
 
   it('keeps a saved rule silent during the day', async () => {
-    escalationConditionSchema.parse({ field: 'time_of_day', operator: 'in', value: ['22:00-06:00'] })
+    escalationConditionSchema.parse({
+      field: 'time_of_day',
+      operator: 'in',
+      value: ['22:00-06:00'],
+    })
 
     expect(
       evaluateEscalationCondition(
@@ -145,5 +151,106 @@ describe('the time_of_day condition leaf', () => {
     ]) {
       expect(escalationConditionSchema.safeParse(condition).success).toBe(false)
     }
+  })
+})
+
+describe('escalationTimerThreshold (ADR-0064, §7.7)', () => {
+  const minute = 60 * 1000
+  const received = Date.parse('2026-11-27T08:00:00Z')
+  const minutes = { low: 30, normal: 15, high: 10, critical: 5 }
+  const timer = (
+    reference: string,
+    operator: 'expired' | 'notExpired' = 'expired',
+  ): EscalationCondition =>
+    ({
+      field: 'timer_expired',
+      operator,
+      value: { reference, minutes },
+    }) as EscalationCondition
+  const percent = (value: number): EscalationCondition =>
+    ({
+      field: 'timer_expired',
+      operator: 'expired',
+      value: { percent: value },
+    }) as EscalationCondition
+  const clock = {
+    priority: 'normal',
+    startAt: { received_at: received, offered: received + 20 * minute },
+    timeline: { from: received, to: received + 100 * minute },
+  }
+
+  it('answers the start value plus the delay of the priority', () => {
+    expect(escalationTimerThreshold(timer('received_at'), clock)).toBe(received + 15 * minute)
+    expect(escalationTimerThreshold(timer('received_at'), { ...clock, priority: 'critical' })).toBe(
+      received + 5 * minute,
+    )
+    expect(escalationTimerThreshold(timer('received_at'), { ...clock, priority: 'unknown' })).toBe(
+      received + 15 * minute,
+    )
+  })
+
+  it('adds the pauses inside the delay', () => {
+    const pausedBetween = (from: number, to: number) =>
+      Math.max(0, Math.min(to, received + 12 * minute) - Math.max(from, received + 10 * minute))
+
+    expect(escalationTimerThreshold(timer('received_at'), { ...clock, pausedBetween })).toBe(
+      received + 17 * minute,
+    )
+  })
+
+  it('answers the share of the timeline for a percent timer', () => {
+    expect(escalationTimerThreshold(percent(80), clock)).toBe(received + 80 * minute)
+    expect(escalationTimerThreshold(percent(100), clock)).toBe(received + 100 * minute)
+    expect(escalationTimerThreshold(percent(80), { ...clock, timeline: undefined })).toBeNull()
+  })
+
+  it('takes the largest timer of an all group and the smallest of an any group', () => {
+    const both = [timer('received_at'), timer('offered')]
+
+    expect(escalationTimerThreshold({ all: both }, clock)).toBe(received + 35 * minute)
+    expect(escalationTimerThreshold({ any: both }, clock)).toBe(received + 15 * minute)
+    expect(
+      escalationTimerThreshold(
+        { all: [{ field: 'priority', operator: 'eq', value: 'high' }, { any: both }] },
+        clock,
+      ),
+    ).toBe(received + 15 * minute)
+  })
+
+  it('answers null without an expired timer whose start value happened', () => {
+    expect(escalationTimerThreshold(null, clock)).toBeNull()
+    expect(escalationTimerThreshold({ all: [] }, clock)).toBeNull()
+    expect(escalationTimerThreshold(timer('accepted'), clock)).toBeNull()
+    expect(escalationTimerThreshold(timer('received_at', 'notExpired'), clock)).toBeNull()
+    expect(
+      escalationTimerThreshold({ field: 'paused', operator: 'eq', value: false }, clock),
+    ).toBeNull()
+  })
+
+  it('agrees with the evaluation of the leaf', () => {
+    const facts: EscalationFacts = {
+      priority: 'high',
+      status: 'NEW',
+      source: 'QR',
+      systemType: null,
+      objectExternalType: null,
+      assigned: false,
+      deadlinePercent: 0,
+      elapsedMinutes: 10,
+      paused: false,
+      stageReached: [],
+      sinceEvent: { received_at: 10 },
+    }
+
+    expect(evaluateEscalationCondition(timer('received_at'), facts)).toBe(true)
+    expect(
+      evaluateEscalationCondition(timer('received_at'), {
+        ...facts,
+        sinceEvent: { received_at: 9 },
+      }),
+    ).toBe(false)
+    expect(escalationTimerThreshold(timer('received_at'), { ...clock, priority: 'high' })).toBe(
+      received + 10 * minute,
+    )
   })
 })

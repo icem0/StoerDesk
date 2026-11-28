@@ -49,9 +49,7 @@ describe.skipIf(testDatabase.status === 'unavailable')(
     })
 
     async function installedChainWithoutNewStage() {
-      await db
-        .delete(escalationStages)
-        .where(eq(escalationStages.key, 'new'))
+      await db.delete(escalationStages).where(eq(escalationStages.key, 'new'))
       await db
         .update(escalationStages)
         .set({ predecessor: null })
@@ -98,13 +96,27 @@ describe.skipIf(testDatabase.status === 'unavailable')(
       expect(byKey.get('new')?.reachedBy).toEqual([])
       expect(byKey.get('review')?.predecessor).toBe('new')
 
+      // The rule `new#1` of `0046` carried the former clock fields; the
+      // migration `0069` turned them into its timer (ADR-0064).
       const rules = await db.select().from(escalationRules)
       const newRule = rules.find((rule) => rule.key === 'new#1')
 
       expect(newRule?.stageKey).toBe('new')
-      expect(newRule?.reference).toBe('received_at')
-      expect(newRule?.minutes).toEqual({ low: 15, normal: 15, high: 15, critical: 5 })
-      expect(rules.find((rule) => rule.key === 'review#1')?.reference).toBe('received_at')
+      expect(newRule?.condition).toEqual({
+        all: [
+          {
+            field: 'timer_expired',
+            operator: 'expired',
+            value: {
+              reference: 'received_at',
+              minutes: { low: 15, normal: 15, high: 15, critical: 5 },
+            },
+          },
+        ],
+      })
+      expect(JSON.stringify(rules.find((rule) => rule.key === 'review#1')?.condition)).toContain(
+        'received_at',
+      )
     })
 
     it('changes nothing when the chain already knows the stage', async () => {
@@ -136,9 +148,23 @@ describe.skipIf(testDatabase.status === 'unavailable')(
   },
 )
 
-/** Runs the statements of the migration `0046` on the database. */
+/**
+ * Runs the statements of the migration `0046` on the database. The rule it
+ * writes names the former clock columns, so the columns that `0069` dropped
+ * come back for the run and the migration `0069` turns them into the timer and
+ * drops them again (ADR-0064) — the database of the pool keeps its schema.
+ */
 async function runStageNewMigration(db: ReturnType<typeof drizzle>): Promise<void> {
-  const file = path.join(migrationsFolder, '0046_escalation_stage_new.sql')
+  await db.execute(
+    'ALTER TABLE "escalation_rules" ADD COLUMN IF NOT EXISTS "reference" text, ADD COLUMN IF NOT EXISTS "minutes" jsonb, ADD COLUMN IF NOT EXISTS "percent" integer',
+  )
+  await runMigration(db, '0046_escalation_stage_new.sql')
+  await runMigration(db, '0069_escalation_rule_timer.sql')
+}
+
+/** Runs the statements of one migration file on the database. */
+async function runMigration(db: ReturnType<typeof drizzle>, name: string): Promise<void> {
+  const file = path.join(migrationsFolder, name)
   const sql = await readFile(file, 'utf8')
 
   for (const statement of sql.split('--> statement-breakpoint')) {

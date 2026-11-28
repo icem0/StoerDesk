@@ -70,9 +70,34 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
 
     const rules = await db.select().from(escalationRules)
 
-    expect(rules.map((rule) => rule.key)).toContain(
-      DEFAULT_WORKFLOW_ESCALATION_RULES.find((rule) => rule.percent === 100)?.key,
+    expect(rules.map((rule) => rule.key)).toContain('deadline#2')
+
+    // The table of §7.2: the clock of every default rule is a timer (ADR-0064).
+    const conditionOf = (key: string) => rules.find((rule) => rule.key === key)?.condition
+    const timerOf = (reference: string, minutes: Record<string, number>) => ({
+      all: [{ field: 'timer_expired', operator: 'expired', value: { reference, minutes } }],
+    })
+    const even = (value: number) => ({ low: value, normal: value, high: value, critical: value })
+
+    expect(conditionOf('new#1')).toEqual(
+      timerOf('received_at', { low: 15, normal: 15, high: 15, critical: 5 }),
     )
+    expect(conditionOf('review#1')).toEqual(
+      timerOf('received_at', { low: 15, normal: 15, high: 15, critical: 5 }),
+    )
+    expect(conditionOf('work_order#1')).toEqual(timerOf('review_started', even(30)))
+    expect(conditionOf('assignment#1')).toEqual(timerOf('work_order_set', even(30)))
+    expect(conditionOf('acceptance#1')).toEqual(
+      timerOf('offered', { low: 20, normal: 20, high: 20, critical: 10 }),
+    )
+    expect(conditionOf('acceptance#2')).toEqual(timerOf('assigned', even(15)))
+    expect(conditionOf('acknowledgement#1')).toEqual(timerOf('accepted', even(60)))
+    expect(conditionOf('deadline#1')).toEqual({
+      all: [{ field: 'timer_expired', operator: 'expired', value: { percent: 80 } }],
+    })
+    expect(conditionOf('deadline#2')).toEqual({
+      all: [{ field: 'timer_expired', operator: 'expired', value: { percent: 100 } }],
+    })
   })
 
   it('changes nothing on a second run', async () => {
@@ -93,9 +118,7 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
       .values({ key: 'ticket.escalation.new_without_review.critical_minutes', value: 7 })
       .onConflictDoNothing({ target: settings.key })
 
-    await db
-      .delete(escalationRules)
-      .where(eq(escalationRules.key, seededRuleKey('review')))
+    await db.delete(escalationRules).where(eq(escalationRules.key, seededRuleKey('review')))
 
     const result = await seedEscalation(db as never)
 
@@ -106,6 +129,17 @@ describe.skipIf(testDatabase.status === 'unavailable')('the escalation seed (int
       .from(escalationRules)
       .where(eq(escalationRules.key, seededRuleKey('review')))
 
-    expect(review?.minutes).toEqual({ low: 20, normal: 20, high: 20, critical: 7 })
+    expect(review?.condition).toEqual({
+      all: [
+        {
+          field: 'timer_expired',
+          operator: 'expired',
+          value: {
+            reference: 'received_at',
+            minutes: { low: 20, normal: 20, high: 20, critical: 7 },
+          },
+        },
+      ],
+    })
   })
 })

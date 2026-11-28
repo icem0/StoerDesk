@@ -18,12 +18,9 @@ const STAGES = [
   },
 ]
 
-const RULE_WITHOUT_MINUTES = {
+const RULE_WITHOUT_TIMER = {
   key: 'review#1',
   stageKey: 'review',
-  reference: 'received_at',
-  minutes: null,
-  percent: 50,
   condition: { all: [] },
   actions: [],
   active: true,
@@ -121,20 +118,26 @@ describe('the fallbacks of the escalation page', () => {
     expect(valuesOf(within(hours).getAllByRole('spinbutton'))).toEqual(['168', '72', '24', '8'])
   })
 
-  it('shows the seeded minutes of a rule without minutes', async () => {
+  it('starts a new timer with the seeded minutes of ADR-0008', async () => {
     void i18n.changeLanguage('de')
-    stubApi({ config: { stages: STAGES, rules: [RULE_WITHOUT_MINUTES] } })
+    stubApi({ config: { stages: STAGES, rules: [RULE_WITHOUT_TIMER] } })
 
     renderPage()
 
     await waitFor(() => expect(screen.getByTestId('escalation-tabs')).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Stufen & Regeln' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Bedingung hinzufügen' }))
+    fireEvent.change(screen.getByLabelText('Feld'), { target: { value: 'timer_expired' } })
 
-    const timeline = await screen.findByTestId('escalation-rule-timeline')
+    const timer = await screen.findByTestId('escalation-condition-timer')
 
-    expect((within(timeline).getByLabelText('Niedrig') as HTMLInputElement).value).toBe('15')
-    expect((within(timeline).getByLabelText('Normal') as HTMLInputElement).value).toBe('15')
-    expect((within(timeline).getByLabelText('Hoch') as HTMLInputElement).value).toBe('15')
-    expect((within(timeline).getByLabelText('Kritisch') as HTMLInputElement).value).toBe('5')
+    expect((within(timer).getByLabelText('Startwert') as HTMLSelectElement).value).toBe(
+      'received_at',
+    )
+    expect((within(timer).getByLabelText('Niedrig (Min.)') as HTMLInputElement).value).toBe('15')
+    expect((within(timer).getByLabelText('Normal (Min.)') as HTMLInputElement).value).toBe('15')
+    expect((within(timer).getByLabelText('Hoch (Min.)') as HTMLInputElement).value).toBe('15')
+    expect((within(timer).getByLabelText('Kritisch (Min.)') as HTMLInputElement).value).toBe('5')
   })
+
 })

@@ -1,10 +1,13 @@
 import { and, eq, inArray, notInArray } from 'drizzle-orm'
 
 import {
+  ESCALATION_REFERENCE_EVENTS,
   computeTicketTimeline,
   escalationRuleConfigSchema,
+  escalationTimerThreshold,
   evaluateEscalationCondition,
   externalTypeCategory,
+  type EscalationCondition,
   type EscalationFacts,
   type EscalationRuleConfig,
 } from '@stoerdesk/shared'
@@ -26,10 +29,12 @@ import {
  * Escalation scan (`specs/07-escalation.md` §7.2, §7.3, §7.7, ADR-0017,
  * WP-M13-06).
  *
- * The scan reads the rules of the database, computes the threshold of every
- * rule from its reference event and its minutes per priority (the deadline
- * rules from the percentage of the timeline), subtracts the overlapping pauses
- * and fires the rules that are due. The condition of a rule decides whether it
+ * The scan reads the rules of the database and fires the rules that are due.
+ * The waiting clock of a rule is the `timer_expired` leaf of its condition
+ * (ADR-0064): the threshold is the start value plus the delay of the priority
+ * of the ticket (a percent timer the share of the timeline) plus the pauses
+ * inside; a stage rule without a timer is due from the start of its wait
+ * (§7.11). The condition of a rule — its timers included — decides whether it
  * fires at all.
  *
  * A rule fires exactly once per ticket, rule and threshold: the unique key of
@@ -41,10 +46,7 @@ type Db = Database['database']
 type TicketRow = typeof tickets.$inferSelect
 type EventRow = typeof ticketEvents.$inferSelect
 type PauseRow = typeof ticketPauses.$inferSelect
-type StageRow = Pick<
-  typeof escalationStages.$inferSelect,
-  'key' | 'predecessor' | 'reachedBy'
->
+type StageRow = Pick<typeof escalationStages.$inferSelect, 'key' | 'predecessor' | 'reachedBy'>
 
 /** Reads the active stage chain of the installation (ADR-0023). */
 export async function readEscalationStageChain(database: Db): Promise<StageRow[]> {
@@ -110,41 +112,23 @@ function pauseMillis(pauses: readonly PauseRow[], from: number, to: number): num
   return total
 }
 
-/** Reads the active rules of the installation. */
+/**
+ * Reads the active rules of the installation. The waiting clock of a rule is
+ * the `timer_expired` leaf of its condition (ADR-0064); the former columns
+ * fell with the migration `0069`.
+ */
 export async function readEscalationRules(database: Db): Promise<EscalationRuleConfig[]> {
-  const rows = await database
-    .select()
-    .from(escalationRules)
-    .where(eq(escalationRules.active, true))
+  const rows = await database.select().from(escalationRules).where(eq(escalationRules.active, true))
 
   return escalationRuleConfigSchema.array().parse(
     rows.map((row) => ({
       key: row.key,
       stageKey: row.stageKey,
-      reference: row.reference,
-      minutes: row.minutes,
-      percent: row.percent,
       condition: row.condition,
       actions: [],
       active: row.active,
     })),
   )
-}
-
-function referenceTime(
-  ticket: TicketRow,
-  rule: EscalationRuleConfig,
-  events: readonly EventRow[],
-): number | undefined {
-  if (rule.reference === 'received_at') {
-    return toMs(ticket.receivedAt)
-  }
-
-  const matching = events
-    .filter((event) => event.type === rule.reference)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-
-  return toMs(matching[0]?.createdAt)
 }
 
 function latestEventTime(
@@ -210,8 +194,58 @@ function stageReferenceTime(
 }
 
 /**
+ * The instants of the start values of the timers (ADR-0064): `received_at` of
+ * the ticket and the latest event of every other start value that happened.
+ */
+function startInstants(ticket: TicketRow, events: readonly EventRow[]): Record<string, number> {
+  const instants: Record<string, number> = {}
+  const received = toMs(ticket.receivedAt)
+
+  if (received !== undefined) {
+    instants.received_at = received
+  }
+
+  for (const reference of ESCALATION_REFERENCE_EVENTS) {
+    if (reference === 'received_at') {
+      continue
+    }
+
+    const latest = latestEventTime(events, [reference])
+
+    if (latest !== undefined) {
+      instants[reference] = latest
+    }
+  }
+
+  return instants
+}
+
+/**
+ * The condition of a rule of the first stage (§7.11): the stage opens with the
+ * ticket, so its rules are due independent of their timer — an `expired`
+ * timer counts as expired, a `notExpired` one as not. The rest of the
+ * condition still decides.
+ */
+function withoutTimers(condition: EscalationCondition): EscalationCondition {
+  if ('all' in condition) {
+    return { all: condition.all.map(withoutTimers) }
+  }
+
+  if ('any' in condition) {
+    return { any: condition.any.map(withoutTimers) }
+  }
+
+  if (condition.field !== 'timer_expired') {
+    return condition
+  }
+
+  return condition.operator === 'expired' ? { all: [] } : { any: [] }
+}
+
+/**
  * Computes the threshold of a rule: the moment the ticket waited longer than
- * the deadline of the rule. `null` means the rule is not due.
+ * the timers of the rule (ADR-0064, §7.7). `null` means the rule is not due;
+ * a due rule answers the condition it is evaluated against.
  */
 function decisionFor(
   ticket: TicketRow,
@@ -220,73 +254,78 @@ function decisionFor(
   pauses: readonly PauseRow[],
   stages: readonly StageRow[],
   now: number,
-): { thresholdAt: Date } | null {
-  if (rule.percent !== null) {
-    const timeline = computeTicketTimeline({
-      reportedAt: ticket.reportedAt,
-      deadlineAt: ticket.deadlineAt,
-      now: new Date(now),
-      pauses,
-    })
+): { thresholdAt: Date; condition: EscalationCondition } | null {
+  const stage =
+    rule.stageKey === null ? undefined : stages.find((entry) => entry.key === rule.stageKey)
 
-    if (timeline.percent < rule.percent) {
+  if (rule.stageKey !== null) {
+    if (stage === undefined) {
       return null
     }
 
-    const reported = ticket.reportedAt.getTime()
-    const deadline = ticket.deadlineAt.getTime()
-    const point = reported + ((deadline - reported) * rule.percent) / 100
-
-    return { thresholdAt: new Date(point + pauseMillis(pauses, reported, point)) }
-  }
-
-  if (rule.stageKey === null || rule.minutes === null) {
-    return null
-  }
-
-  const stage = stages.find((entry) => entry.key === rule.stageKey)
-
-  if (stage === undefined) {
-    return null
-  }
-
-  if (stage.reachedBy.some((type) => events.some((event) => event.type === type))) {
-    return null
-  }
-
-  // The first stage of the chain opens with the ticket itself: its rules are
-  // due at creation, independent of their reference event and minutes. The
-  // condition still decides whether such a rule fires (WP-M14-91).
-  if (stage.predecessor === null) {
-    if (pauses.some((pause) => pause.endedAt === null)) {
+    if (stage.reachedBy.some((type) => events.some((event) => event.type === type))) {
       return null
     }
 
-    const received = toMs(ticket.receivedAt)
+    // The first stage of the chain opens with the ticket itself: its rules are
+    // due at creation, independent of their timer. The condition still decides
+    // whether such a rule fires (WP-M14-91, §7.11).
+    if (stage.predecessor === null) {
+      if (pauses.some((pause) => pause.endedAt === null)) {
+        return null
+      }
 
-    return received === undefined ? null : { thresholdAt: new Date(received) }
+      const received = toMs(ticket.receivedAt)
+
+      return received === undefined
+        ? null
+        : { thresholdAt: new Date(received), condition: withoutTimers(rule.condition) }
+    }
   }
 
-  const reference =
-    rule.reference === null
-      ? stageReferenceTime(ticket, events, stages, stage.key)
-      : referenceTime(ticket, rule, events)
+  const threshold = escalationTimerThreshold(rule.condition, {
+    priority: ticket.priority,
+    startAt: startInstants(ticket, events),
+    timeline: { from: ticket.reportedAt.getTime(), to: ticket.deadlineAt.getTime() },
+    pausedBetween: (from, to) => pauseMillis(pauses, from, to),
+  })
 
-  if (reference === undefined) {
+  if (threshold !== null) {
+    return threshold > now ? null : { thresholdAt: new Date(threshold), condition: rule.condition }
+  }
+
+  // A rule without a timer waits with zero delay from the start of its wait:
+  // the reached predecessor of its stage, the report without one (ADR-0064,
+  // decision 4). A rule without a stage waits from the report.
+  const start =
+    stage === undefined
+      ? toMs(ticket.receivedAt)
+      : stageReferenceTime(ticket, events, stages, stage.key)
+
+  if (start === undefined || start > now) {
     return null
   }
 
-  const priority = ticket.priority as keyof typeof rule.minutes
-  const minutes = rule.minutes[priority] ?? rule.minutes.normal
-  const elapsed = now - reference - pauseMillis(pauses, reference, now)
+  return { thresholdAt: new Date(start), condition: rule.condition }
+}
 
-  if (elapsed < minutes * 60 * 1000) {
-    return null
+/**
+ * The minutes elapsed from every start value that happened to now, pauses
+ * excluded (ADR-0064, §7.4) — the facts of the `timer_expired` leaf.
+ */
+function sinceEvent(
+  ticket: TicketRow,
+  events: readonly EventRow[],
+  pauses: readonly PauseRow[],
+  now: number,
+): Record<string, number> {
+  const elapsed: Record<string, number> = {}
+
+  for (const [reference, start] of Object.entries(startInstants(ticket, events))) {
+    elapsed[reference] = Math.max(0, now - start - pauseMillis(pauses, start, now)) / 60000
   }
 
-  const point = reference + minutes * 60 * 1000
-
-  return { thresholdAt: new Date(point + pauseMillis(pauses, reference, point)) }
+  return elapsed
 }
 
 /** The facts of a ticket that the conditions of the rules are evaluated against. */
@@ -320,6 +359,7 @@ function factsFor(
     paused: pauses.some((pause) => pause.endedAt === null),
     stageReached: reachedStages(events, stages),
     staffedPools,
+    sinceEvent: sinceEvent(ticket, events, pauses, now),
   }
 }
 
@@ -349,7 +389,7 @@ async function evaluateOne(
       continue
     }
 
-    if (!evaluateEscalationCondition(rule.condition, facts)) {
+    if (!evaluateEscalationCondition(decision.condition, facts)) {
       continue
     }
 
