@@ -571,7 +571,6 @@ export const escalationActionConfigSchema = escalationActionUnion.superRefine((a
       message: 'notify_needs_target_or_channel',
     })
   }
-
 })
 
 export type EscalationActionConfig = z.infer<typeof escalationActionConfigSchema>
@@ -581,11 +580,15 @@ export const escalationRuleConfigSchema = z
     key: z.string().regex(escalationRuleKeyPattern),
     /** The stage of the rule; the deadline rules carry no stage. */
     stageKey: z.string().regex(keyPattern).nullable(),
-    /** The event that starts the waiting clock. */
+    /**
+     * @deprecated The former clock of a rule (ADR-0064): the event that started
+     * it. The clock is a `timer_expired` leaf of the condition; WP-M45-02
+     * removes the field together with its column.
+     */
     reference: z.enum(ESCALATION_REFERENCE_EVENTS).nullable(),
-    /** The waiting deadline per priority. */
+    /** @deprecated The former waiting deadline per priority (ADR-0064). */
     minutes: escalationMinutesSchema.nullable(),
-    /** The percentage of the timeline of a deadline rule. */
+    /** @deprecated The former percentage of a deadline rule (ADR-0064). */
     percent: z.number().int().min(1).max(100).nullable(),
     condition: escalationConditionSchema,
     actions: z.array(escalationActionConfigSchema).max(20),
@@ -873,9 +876,8 @@ function evaluateLeaf(leaf: EscalationConditionLeaf, facts: EscalationFacts): bo
         'percent' in value
           ? facts.deadlinePercent >= value.percent
           : facts.sinceEvent !== undefined &&
-              (facts.sinceEvent[value.reference] ?? -1) >=
-                ((value.minutes as Record<string, number>)[facts.priority] ??
-                  value.minutes.normal)
+            (facts.sinceEvent[value.reference] ?? -1) >=
+              ((value.minutes as Record<string, number>)[facts.priority] ?? value.minutes.normal)
 
       return leaf.operator === 'notExpired' ? !expired : expired
     }
@@ -922,10 +924,12 @@ export function escalationTimerLeaves(
 
   return escalationConditionLeaves(condition).flatMap((entry) =>
     entry.field === 'timer_expired'
-      ? [{
-          operator: (entry.operator as 'expired' | 'notExpired'),
-          value: entry.value as EscalationTimerValue,
-        }]
+      ? [
+          {
+            operator: entry.operator as 'expired' | 'notExpired',
+            value: entry.value as EscalationTimerValue,
+          },
+        ]
       : [],
   )
 }

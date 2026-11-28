@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   switched on (`403 customer_portal_disabled`).
 
 ### Changed
+- **The waiting clock of an escalation rule is a condition (WP-M45-01 …,
+  ADR-0064).** The condition of a rule knows the leaf `timer_expired`: a start
+  value of the ticket (report, review, work order, offer, assignment,
+  acceptance) with a delay per priority — or a percent of the timeline. The
+  shared contract evaluates the leaf against the minutes since every event,
+  pauses excluded, and derives the threshold of the firing log from the timers.
 - **The administration names its keys and its blocked actions in a panel
   (WP-M36-05, ADR-0060).** The native `title=` tooltips of the administration
   moved to the help popover: the key of a row in the statuses, the detected

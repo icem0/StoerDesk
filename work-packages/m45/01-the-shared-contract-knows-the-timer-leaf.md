@@ -1,7 +1,7 @@
 # WP-M45-01: the shared contract knows the timer leaf
 
 format: ctx-256k
-status: planned
+status: done
 depends-on: WP-M45-00
 phase: 45
 milestone: m45
@@ -88,8 +88,28 @@ Expected: all green; `time_of_day` and the shift conditions keep working.
 
 ## Handoff
 
-- Files changed:
-- Interfaces added:
-- Verified:
+- Files changed: `packages/shared/src/schemas/escalation-config.ts` (the
+  `timer_expired` leaf, `EscalationFacts.sinceEvent`, the evaluation,
+  `escalationTimerLeaves`, the deprecated rule fields), `packages/shared/src/escalation.ts`
+  (`escalationTimerThreshold`, `EscalationTimerClock`) and the two test files.
+  The contract and the evaluator landed in `d2c98418` (v1.2.261); this commit
+  completes the package with the threshold helper and the missing tests.
+- Interfaces added: the `timer_expired` leaf (`expired`/`notExpired`, value
+  `{ reference, minutes }` or `{ percent }` 1–100 — a timer of 0 % is no
+  clock, the same bound as the former rule field), `EscalationFacts.sinceEvent`,
+  `escalationTimerLeaves(condition)`, `escalationTimerThreshold(condition, clock)`.
+  Deviation from the interface line: the threshold is an **instant** in epoch
+  milliseconds, not minutes — the clock (`priority`, `startAt` per start value,
+  `timeline` of the percent timer, `pausedBetween`) is handed over by the
+  engine, so the pause arithmetic of the firing log stays in one pure place.
+  An `all` group answers its largest timer, an `any` group its smallest, so the
+  threshold of a rule is the same in every scan (the unique key of §7.7).
+- `reference`, `minutes` and `percent` stay **nullable**, not optional: an
+  optional field would break the API and the administration outside this
+  package; WP-M45-02 removes them with the columns.
+- The defaults keep the rule fields in this package (task 5); their timers are
+  asserted by WP-M45-02 together with the rewritten seed.
+- Verified: `npm run typecheck --workspaces --if-present`, `npm run lint`,
+  `npm run test:run`, `npm run wp:check`
 - Follow-up WP: WP-M45-02, WP-M45-03, WP-M45-04 exist as files since WP-M45-00
-- Open question (if any):
+- Open question: none
